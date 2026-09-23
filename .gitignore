@@ -1,0 +1,28 @@
+# Segredos e configuração local
+.env
+.env.*
+!.env.exemplo
+
+# Vídeos e tudo que a API gera
+dados/
+*.mp4
+*.mov
+*.m4v
+*.webm
+*.mkv
+*.avi
+*.wav
+*.mp3
+
+# edvid instalado pelo scripts/instalar-edvid.sh
+vendor/
+
+# Python / Node
+.venv/
+venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# Sistema
+.DS_Store

@@ -1,0 +1,5 @@
+# API do dig.D Vídeo. A transcrição (WhisperX) NÃO entra aqui: ela vive no
+# venv do edvid, instalado por scripts/instalar-edvid.sh.
+fastapi>=0.115,<1
+uvicorn>=0.30
+python-multipart>=0.0.9

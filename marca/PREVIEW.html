@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dig.D Vídeo · marca</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--dv-fonte); background: #FFFFFF; color: var(--dv-tinta); }
+  .faixa { padding: 56px max(16px, calc((100vw - 1100px) / 2)); }
+  .escura { background: var(--dv-cosmic); color: var(--dv-creme); }
+  .rotulo { font-family: var(--dv-fonte-mono); font-size: 12px; letter-spacing: .04em; opacity: .6; margin-bottom: 24px; }
+  .linha { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 56px; }
+  .item { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+  .item small { font-family: var(--dv-fonte-mono); font-size: 11px; opacity: .55; }
+
+  header.topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 20px max(16px, calc((100vw - 1100px) / 2)); border-bottom: 1px solid #E6E8EF; }
+  header.topo span { font-family: var(--dv-fonte-mono); font-size: 12px; opacity: .6; }
+
+  .tamanhos { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px; }
+  .item { max-width: 100%; }
+  .item img, .gh img { max-width: 100%; height: auto; }
+
+  /* aba de navegador */
+  .aba { display: inline-flex; align-items: center; gap: 8px; background: #DEE1E6; border-radius: 8px 8px 0 0;
+    padding: 8px 14px; font-size: 12px; color: #202124; font-family: system-ui, sans-serif; }
+
+  /* paleta */
+  .paleta { display: grid; grid-template-columns: 6fr 3fr 1fr; height: 180px; border-radius: 14px; overflow: hidden; }
+  .paleta div { padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 13px; }
+  .paleta b { font-size: 15px; }
+  .paleta code { font-family: var(--dv-fonte-mono); }
+  .apoio { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .apoio div { flex: 1 1 140px; border-radius: 10px; padding: 14px; font-size: 12px; border: 1px solid #E6E8EF; }
+  .apoio code { font-family: var(--dv-fonte-mono); display: block; margin-top: 2px; }
+
+  /* README */
+  .readmes { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  .gh { border-radius: 10px; padding: 36px 24px 28px; text-align: center; border: 1px solid #D0D7DE; background: #FFFFFF; color: #1F2328;
+    font-family: -apple-system, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif; }
+  .gh.dark { background: #0D1117; border-color: #30363D; color: #E6EDF3; }
+  .gh h3 { font-size: 16px; margin: 18px 0 10px; }
+  .gh p { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+  .gh a { color: #0969DA; text-decoration: none; }
+  .gh.dark a { color: #4493F8; }
+  .gh hr { border: 0; border-top: 1px solid #D0D7DE; margin-top: 16px; }
+  .gh.dark hr { border-color: #30363D; }
+
+  /* barra do editor */
+  .editor { border-radius: 14px; overflow: hidden; border: 1px solid var(--dv-linha); background: var(--dv-cosmic-fundo); }
+  .barra { display: flex; align-items: center; gap: 24px; padding: 14px 20px; background: var(--dv-cosmic); border-bottom: 1px solid var(--dv-linha); flex-wrap: wrap; }
+  .abas { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+  .abas span { font-size: 13px; padding: 7px 12px; border-radius: 8px; color: var(--dv-texto-2); }
+  .abas span.ativa { background: var(--dv-selecao); color: var(--dv-branco); }
+  .btn { font: 700 14px var(--dv-fonte); border: 0; border-radius: 10px; padding: 10px 16px; }
+  .btn.primario { background: var(--dv-primario); color: var(--dv-primario-texto); }
+  .btn.decisivo { background: var(--dv-decisivo); color: var(--dv-decisivo-texto); font-size: 19px; padding: 12px 20px; }
+  .corpo { padding: 24px 20px 28px; display: flex; flex-direction: column; gap: 18px; }
+  .status { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .badge { background: var(--dv-amarelo); color: var(--dv-tinta); font: 700 12px var(--dv-fonte); padding: 4px 10px; border-radius: 999px; }
+  .tc { font-family: var(--dv-fonte-mono); font-size: 13px; color: var(--dv-texto-2); }
+  .trilha { position: relative; height: 56px; border-radius: 8px; background: rgba(244,241,233,.05);
+    background-image: repeating-linear-gradient(90deg, rgba(244,241,233,.08) 0 2px, transparent 2px 7px); }
+  .trilha .sel { position: absolute; top: 0; bottom: 0; left: 18%; width: 22%; background: var(--dv-selecao); border-radius: 6px; }
+  .trilha .sai { position: absolute; top: 0; bottom: 0; left: 58%; width: 12%; background: var(--dv-corte); border: 1px dashed var(--dv-rosa-texto); border-radius: 6px; }
+  .trilha .sai i { position: absolute; top: -22px; left: 0; font: 500 11px var(--dv-fonte-mono); color: var(--dv-rosa-texto); font-style: normal; }
+  .trilha .agulha { position: absolute; top: -6px; bottom: -6px; left: 33%; width: 2px; background: var(--dv-agulha); }
+  .trilha .agulha::before { content: ""; position: absolute; top: -2px; left: -5px; width: 12px; height: 12px; border-radius: 3px; background: var(--dv-agulha); }
+  .acoes { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <img src="logo-horizontal.svg" alt="dig.D Vídeo" height="40">
+  <span>proposta de marca · 23/09/2026</span>
+</header>
+
+<section class="faixa">
+  <p class="rotulo">logo · fundo claro</p>
+  <div class="linha">
+    <div class="item"><img src="logo.svg" alt="" height="170"><small>logo.svg</small></div>
+    <div class="item"><img src="logo-horizontal.svg" alt="" height="64"><small>logo-horizontal.svg</small></div>
+    <div class="item"><img src="icone.svg" alt="" height="96"><small>icone.svg</small></div>
+  </div>
+</section>
+
+<section class="faixa escura">
+  <p class="rotulo">logo · fundo escuro (a tela do editor)</p>
+  <div class="linha">
+    <div class="item"><img src="logo-negativo.svg" alt="" height="170"><small>logo-negativo.svg</small></div>
+    <div class="item"><img src="logo-horizontal-negativo.svg" alt="" height="64"><small>logo-horizontal-negativo.svg</small></div>
+    <div class="item"><img src="icone.svg" alt="" height="96"><small>icone.svg</small></div>
+  </div>
+</section>
+
+<section class="faixa">
+  <p class="rotulo">tamanho real · 16 · 24 · 32 · 64 · 128</p>
+  <div class="linha">
+    <div class="tamanhos">
+      <img src="favicon.svg" alt="" width="16" height="16">
+      <img src="icone.svg" alt="" width="24" height="24">
+      <img src="icone.svg" alt="" width="32" height="32">
+      <img src="icone.svg" alt="" width="64" height="64">
+      <img src="icone.svg" alt="" width="128" height="128">
+    </div>
+    <div class="item">
+      <div class="aba"><img src="favicon.svg" alt="" width="16" height="16"> dig.D Vídeo · Editor</div>
+      <small>favicon.svg na aba</small>
+    </div>
+  </div>
+</section>
+
+<section class="faixa" style="padding-top:0">
+  <p class="rotulo">paleta · 60 / 30 / 10</p>
+  <div class="paleta">
+    <div style="background:var(--dv-azul);color:#fff"><b>Azul</b><code>#064794</code>produto · botão · seleção</div>
+    <div style="background:var(--dv-rosa);color:#fff"><b>Rosa</b><code>#EA2871</code>a ação que decide · o ponto</div>
+    <div style="background:var(--dv-amarelo);color:var(--dv-tinta)"><b>Amarelo</b><code>#FFD413</code>agulha</div>
+  </div>
+  <div class="apoio">
+    <div style="background:var(--dv-cosmic);color:var(--dv-creme);border-color:transparent">Cosmic<code>#0A1024</code></div>
+    <div style="background:var(--dv-creme)">Creme<code>#F4F1E9</code></div>
+    <div style="background:var(--dv-tinta);color:#fff;border-color:transparent">Tinta<code>#15141B</code></div>
+    <div>DM Sans <b>800</b> · 500 · 400<code>DM Mono 00:42.18</code></div>
+  </div>
+</section>
+
+<section class="faixa" style="background:#F6F8FA">
+  <p class="rotulo">cabeçalho do README · GitHub claro e escuro</p>
+  <div class="readmes">
+    <div class="gh">
+      <img src="logo-horizontal.svg" alt="dig.D Vídeo" height="56">
+      <h3>Você marca o que sai. Ele corta, legenda e espera o seu sim.</h3>
+      <p>Editor de vídeo curto que roda no navegador: tira os silêncios sozinho, corta os trechos em que você escreveu "corta", aplica o estilo de legenda e só entrega depois que você aprova.</p>
+      <p>Feito pela <a href="#">dig.D</a> · licença e créditos em <a href="#">LICENSE</a></p>
+      <hr>
+    </div>
+    <div class="gh dark">
+      <img src="logo-horizontal-negativo.svg" alt="dig.D Vídeo" height="56">
+      <h3>Você marca o que sai. Ele corta, legenda e espera o seu sim.</h3>
+      <p>Editor de vídeo curto que roda no navegador: tira os silêncios sozinho, corta os trechos em que você escreveu "corta", aplica o estilo de legenda e só entrega depois que você aprova.</p>
+      <p>Feito pela <a href="#">dig.D</a> · licença e créditos em <a href="#">LICENSE</a></p>
+      <hr>
+    </div>
+  </div>
+</section>
+
+<section class="faixa escura">
+  <p class="rotulo">na tela · tokens.css aplicado</p>
+  <div class="editor">
+    <div class="barra">
+      <img src="logo-horizontal-negativo.svg" alt="dig.D Vídeo" height="30">
+      <div class="abas"><span>Fila</span><span class="ativa">O que cortar</span><span>Estilo</span><span>Visual</span><span>Prontos</span><span>Capas</span></div>
+    </div>
+    <div class="corpo">
+      <div class="status"><span class="badge">Esperando o seu sim</span><span class="tc">00:12.40 / 00:51.60</span></div>
+      <div class="trilha"><div class="sel"></div><div class="sai"><i>corta</i></div><div class="agulha"></div></div>
+      <div class="acoes"><button class="btn primario">Salvar ajustes</button><button class="btn decisivo">Aplicar o que marquei</button></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

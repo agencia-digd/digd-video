@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dig.D Vídeo</title>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Poppins italic 900 + Playfair italic 900 are NOT decoration here: the caption
+     previews render the real template styles, and the stacked style is built out
+     of exactly these faces (see STACK_MIXED in StackedCaptions.tsx). -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;600;700;800&family=Poppins:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&family=Playfair+Display:ital,wght@1,900&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Libre+Baskerville:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+
+<header class="glass">
+  <!-- O caminho de volta pra quem embute o editor num painel proprio. O
+       endereco vem de VIDEOS_VOLTAR_URL; sem ele o link nao aparece. -->
+  <a id="voltar" class="voltar hidden" href="#" title="Voltar pro painel">←</a>
+  <img class="logo-marca" src="/assets/logo.svg" alt="dig.D Vídeo" height="30">
+  <div class="head-info">
+    <div id="projectName" class="project-name">—</div>
+    <div id="stateMessage" class="state-message"></div>
+  </div>
+  <div class="head-actions">
+    <span id="dirtyPill" class="pill hidden"><b id="dirtyCount">0</b> ajustes por salvar</span>
+    <span id="savedPill" class="pill saved hidden">✓ Salvo. Agora é só aplicar.</span>
+    <button id="btnDiscard" class="btn ghost hidden">Descartar</button>
+    <button id="btnSave" class="btn primary hidden">Salvar ajustes</button>
+    <button id="btnApply" class="btn primary hidden">Aplicar o que marquei</button>
+  </div>
+</header>
+
+<nav id="tabs" class="tabs" aria-label="Etapas de vídeo">
+  <button class="tab" data-tab="fila">Fila</button>
+  <button class="tab active" data-tab="1">O que cortar</button>
+  <!-- the gate lives BETWEEN the phases and stays reachable: changing the style
+       after etapa visual exists is a normal thing to want, not a one-shot decision -->
+  <button class="tab" data-tab="style">Estilo</button>
+  <button class="tab" data-tab="2">Visual</button>
+  <button class="tab" data-tab="prontos">Prontos</button>
+  <button class="tab" data-tab="capas">Capas</button>
+</nav>
+
+<main>
+  <p id="libraryMessage" role="status" aria-live="polite"></p>
+  <section id="queuePage" class="workflow-page hidden" aria-label="Fila">
+    <div class="glass workflow-card"><div class="panel-heading"><h2>Mandar um vídeo</h2><span>Corta os silêncios sozinho</span></div>
+      <label class="btn primary">Escolher vídeo <input id="uploadVideo" type="file" accept="video/*"></label>
+      <p>A gente tira os silêncios de 1,2s pra cima, empareja o volume dos trechos baixos e devolve pronto. Um vídeo de 1 minuto leva uns 2.</p>
+    </div>
+    <div class="panel-heading"><h2>Na fila</h2><span id="queueCount" class="pill"></span></div>
+    <div id="queueList" class="workflow-grid"></div>
+    <div class="panel-heading"><h2>Escolher um vídeo para editar</h2></div>
+    <div id="videoList" class="workflow-grid"></div>
+  </section>
+  <section id="readyPage" class="workflow-page hidden" aria-label="Prontos">
+    <p>Assista antes de aprovar. Recusar devolve ao Estilo; nada é apagado.</p>
+    <div class="panel-heading"><h2>Esperando o seu sim</h2></div><div id="pendingList" class="workflow-grid"></div>
+    <div class="panel-heading"><h2>Aprovados</h2></div><div id="approvedList" class="workflow-grid"></div>
+    <div class="panel-heading"><h2>Cortes e versões</h2></div><div id="versionsList" class="workflow-grid"></div>
+  </section>
+  <section id="coverPage" class="workflow-page hidden" aria-label="Capas">
+    <div class="glass workflow-card">
+      <div class="panel-heading"><h2>Fazer uma capa</h2><span>no estilo das suas referências</span></div>
+      <p>Escreva a frase em até quatro partes, uma por linha. A primeira sai pequena
+         e à mão; a segunda é a grande; a terceira é a ponte; a quarta vem grifada
+         em amarelo — é onde cai a parte que ninguém pediu.</p>
+      <label>A frase da capa<textarea id="coverPhrase" rows="4" maxlength="320"
+        placeholder="eu achava que&#10;EDITAR VÍDEO&#10;levava&#10;UMA TARDE INTEIRA"></textarea></label>
+      <label>No estilo de<select id="coverFamily"></select></label>
+      <div class="workflow-actions">
+        <button id="coverGo" class="btn primary">Gerar capa</button>
+      </div>
+      <p id="coverNote"></p>
+    </div>
+
+    <div class="panel-heading"><h2>Capas deste vídeo</h2><span id="coverCount" class="pill"></span></div>
+    <div id="coverList" class="workflow-grid"></div>
+
+    <div class="panel-heading"><h2>As referências da casa</h2><span>cada uma é uma linguagem</span></div>
+    <div id="coverRef" class="workflow-grid"></div>
+  </section>
+  <aside id="cutGate" class="glass workflow-card hidden"></aside>
+  <p id="cutWarning" class="hidden">Marque na linha do tempo, escreva <b>corta</b> numa nota em cima do que sai e salve. Depois aperte Aplicar: o vídeo é refeito e <b>as versões com legenda existentes são apagadas</b>, porque pertenciam ao corte antigo.</p>
+  <p id="visualNotice" class="hidden">O render final pode ser assistido em Prontos. A API ainda não fornece os arquivos de legenda e inserções da etapa Visual; aqui permanece a linha do tempo disponível.</p>
+
+  <section id="emptyState" class="empty glass hidden">
+    <div class="empty-inner">
+      <div class="empty-icon" aria-hidden="true">d<span>●</span></div>
+      <h2>A gente está preparando seu vídeo</h2>
+      <p>Assim que o vídeo estiver pronto, a linha do tempo aparece aqui.</p>
+    </div>
+  </section>
+
+  <!-- The style tab: what etapa visual gets built as. Groups come from STYLE_CATALOG.
+       No descriptions anywhere — each preview renders the thing it names. -->
+  <section id="styleSetup" class="setup hidden">
+    <div class="setup-inner">
+      <div class="setup-head">
+        <h2>Como a gente vai montar o visual?</h2>
+      </div>
+
+      <div class="setup-group">
+        <div class="group-head"><span class="group-title">Tipo de edição</span></div>
+        <div id="optEdit" class="opt-grid"></div>
+      </div>
+
+      <!-- Ahead of the text styles: the accent is what they paint with, so it is
+           set first and both preview groups below react to it. -->
+      <div class="setup-group">
+        <div class="group-head">
+          <span class="group-title">Cor de destaque</span>
+          <span class="group-note" id="accentNote"></span>
+        </div>
+        <div id="optAccent" class="swatches"></div>
+      </div>
+
+      <div class="setup-group">
+        <div class="group-head"><span class="group-title">Estilo do título</span></div>
+        <div id="optHeadline" class="opt-grid"></div>
+      </div>
+
+      <div class="setup-group">
+        <div class="group-head"><span class="group-title">Estilo de legenda</span></div>
+        <div id="optCaptions" class="opt-grid"></div>
+      </div>
+
+      <div class="setup-group">
+        <div class="group-head"><span class="group-title">Elementos da edição</span></div>
+        <div id="optElements" class="check-row"></div>
+      </div>
+
+      <div id="renderControls" class="workflow-card">
+        <div class="panel-heading"><h2>Texto da headline</h2></div>
+        <label>Uma linha por linha (até três; vazio para não ter)<textarea id="headlineLines" rows="3" maxlength="120"></textarea></label>
+        <label>Tamanho do título<select id="headlineScale"><option value="0.8">Menor</option><option value="1" selected>Padrão</option><option value="1.3">Maior</option><option value="1.6">Bem maior</option><option value="2">Gigante</option></select></label>
+        <p>Aparece nos primeiros 4 segundos. Sem texto, o vídeo começa direto na fala.</p>
+        <label>Altura da legenda<select id="captionRise"><option value="0" selected>Padrão</option><option value="0.08">Um pouco mais alta</option><option value="0.15">Mais alta</option><option value="0.22">Bem mais alta</option><option value="0.48">Acima da cabeça</option></select></label>
+        <label>Tamanho da legenda<select id="captionScale"><option value="1">Padrão</option><option value="1.25">Maior</option><option value="1.45" selected>Bem maior</option><option value="1.7">Gigante</option></select></label>
+        <p>No celular a legenda some se for pequena. Bem maior é o que a gente vem usando. As três estáticas quebram linhas por largura.</p>
+        <div class="panel-heading"><h2>Cartão de fechamento</h2><span>Últimos 3 segundos</span></div>
+        <label>A palavra que ele digita<input id="closingWord" maxlength="20" placeholder="QUERO"></label>
+        <label>Antes<input id="closingBefore" maxlength="30" value="digita"></label>
+        <label>Depois<input id="closingAfter" maxlength="30" value="aqui embaixo"></label>
+        <div id="closingPreview" class="glass closing-preview"></div>
+        <label><input id="soundtrackEnabled" type="checkbox" checked> Trilha sonora da biblioteca</label>
+        <label>Trilha<select id="soundtrack"><option value="warm">Acolhedora</option><option value="punch">Com energia</option><option value="tense">Tensa</option><option value="cta">De chamada</option><option value="dark">Séria</option><option value="tech">Tecnológica</option></select></label>
+        <p>Só vale com Trilha sonora ligada. Música da biblioteca local (Mixkit, licença livre pra uso comercial), baixada na instalação. Sem ela, o vídeo sai sem trilha.</p>
+        <p>Zoom nos cortes alterna o enquadramento; aproximação automática avança devagar; câmera acompanha o rosto no terço superior; clarão começa dois frames antes do corte. Os liga-desliga acima controlam esses quatro elementos.</p>
+        <p>Limites do render automático: cor personalizada, música com IA e observações são guardadas como escolhas, mas o servidor não as aplica. Legenda “Nenhum” não é aceita pelo render.</p>
+        <section id="splitPanel" class="glass workflow-card hidden">
+          <div class="panel-heading"><h2>Faixas de tela dividida</h2><span class="pill">Arte e rosto</span></div>
+          <label>Família da arte<select id="splitFamily"></select></label>
+          <label>Enquadramento medido neste vídeo (JSON)<textarea id="splitFraming" rows="4"></textarea></label>
+          <p>O enquadramento pina o rosto: zoom controla a escala e focusY a posição vertical; use a medida deste vídeo para top (arte acima) ou bottom (arte abaixo).</p>
+          <div id="splitRows"></div>
+          <button id="splitAdd" class="btn">Acrescentar faixa</button>
+          <button id="splitGenerate" class="btn primary">Gerar novas artes e salvar faixas</button>
+          <p id="splitNotice"></p>
+        </section>
+        <p id="renderTarget"></p><p id="renderSummary"></p>
+        <button id="renderVideo" class="btn primary">Aplicar e renderizar</button>
+        <p>Leva alguns minutos; acompanhe na Fila. Estilos diferentes preservam as versões anteriores; renderizar o mesmo estilo substitui a versão dele.</p>
+      </div>
+      <div class="setup-actions">
+        <textarea id="setupNote" rows="1" placeholder="Observações para a etapa visual (opcional)"></textarea>
+        <button id="setupGo" class="btn primary">Confirmar e iniciar a etapa visual</button>
+      </div>
+      <span id="setupSummary" class="setup-summary"></span>
+    </div>
+  </section>
+
+  <div id="stage" class="stage">
+  <section id="playerWrap" class="player-wrap">
+    <div class="panel-heading"><h2>Seu vídeo</h2><span class="panel-caption">ASSISTA E MARQUE</span></div>
+    <div class="player-frame glass">
+      <video id="video" playsinline preload="auto"></video>
+    </div>
+    <div class="transport glass">
+      <button id="btnPlay" class="btn icon" title="Reproduzir ou pausar (espaço)"></button>
+      <button id="btnMute" class="btn icon" title="Mudo"></button>
+      <span id="timeNow" class="time">0:00.00</span>
+      <span class="time dim">/</span>
+      <span id="timeTotal" class="time dim">0:00.00</span>
+      <button id="btnMark" class="btn mark" title="Marcar início ou fim do trecho (tecla M)">
+        <span id="markIcon"></span><span id="markText">Marcar trecho</span>
+      </button>
+    </div>
+  </section>
+
+  <div id="editorCol" class="editor-col">
+    <div class="panel-heading"><h2>Suas marcações</h2><span class="panel-caption">O QUE MUDA NO VÍDEO</span><button id="btnHelp" class="help-fab" title="Como marcar trechos" aria-label="Como marcar trechos">Ajuda</button></div>
+    <div class="timeline-tools"><p>Marque um trecho e conte o que precisa mudar.</p>      <div class="spacer"></div>
+      <label for="zoom" class="dim small">Ampliar</label>
+      <input id="zoom" type="range" min="0" max="100" value="0" title="Zoom da linha do tempo (a partir do ponto atual)">
+      <button id="btnFit" class="btn ghost small" title="Ajustar à janela">Ajustar</button>
+</div>
+
+    <section id="timelinePanel" class="timeline-panel glass">
+    <div id="timeline" class="timeline">
+      <div class="track ruler-track">
+        <div class="track-label"></div>
+        <div class="lane ruler-lane"><canvas id="ruler"></canvas></div>
+      </div>
+      <div class="track" id="trkNotes">
+        <div class="track-label"><span class="tl-chip notes" data-icon="notes" title="Marcações de ajuste"></span><span class="track-name">MARCAÇÕES</span></div>
+        <div class="lane notes-lane" id="laneNotes"></div>
+      </div>
+      <div id="trkCaptions" class="track hidden">
+        <div class="track-label"><span class="tl-chip teal" data-icon="captions" title="Legendas"></span><span class="track-name">LEGENDA</span></div>
+        <div class="lane" id="laneCaptions"></div>
+      </div>
+      <div class="track">
+        <div class="track-label"><span class="tl-chip" data-icon="video" title="Vídeo"></span><span class="track-name">VÍDEO</span></div>
+        <div class="lane tall" id="laneVideo"></div>
+      </div>
+      <div class="track">
+        <div class="track-label">
+          <button class="tl-chip olive" id="jcutToggle" data-icon="audio"
+                  title="Áudio completo" aria-expanded="false"></button><span class="track-name">ÁUDIO</span>
+        </div>
+        <div class="lane" id="laneAudio"><canvas id="wave"></canvas></div>
+      </div>
+      <!-- J-cut: takes alternate between A1 and A2 so the overlap is visible,
+           the way two audio tracks read in a real NLE timeline. Collapsed into the
+           audio track by default — expanded from the chip's caret.
+           NOTE: no wrapper with overflow:hidden around these. The gutter mask
+           rides position:sticky on .track-label, and an overflow ancestor would
+           make a new scroll container and strand it. -->
+      <div class="track jcut-track hidden" id="trkAudioA1">
+        <div class="track-label"><span class="tl-chip olive ghost" data-icon="audio" title="Áudio 1"></span><span class="track-name">ÁUDIO 1</span></div>
+        <div class="lane jcut-lane" id="laneAudioA1"></div>
+      </div>
+      <div class="track jcut-track hidden" id="trkAudioA2">
+        <div class="track-label"><span class="tl-chip olive ghost" data-icon="audio" title="Áudio 2"></span><span class="track-name">ÁUDIO 2</span></div>
+        <div class="lane jcut-lane" id="laneAudioA2"></div>
+      </div>
+      <div id="insertTracks" class="hidden"></div>
+      <div id="gutterLine" class="gutter-line"></div>
+      <div id="needle" class="needle"><div class="needle-head"></div></div>
+      </div>
+    </section>
+  </div>
+  </div>
+
+</main>
+
+
+
+<div id="helpBackdrop" class="help-backdrop hidden"></div>
+<div id="helpModal" class="help-modal glass hidden" role="dialog" aria-label="Atalhos e gestos">
+  <div class="help-head">
+    <span class="help-title">Atalhos e gestos</span>
+    <button id="helpClose" class="btn ghost small" title="Fechar">✕</button>
+  </div>
+  <ul class="help-list">
+    <li><span><kbd>espaço</kbd></span><span>reproduzir ou pausar</span></li>
+    <li><span><kbd>←</kbd><kbd>→</kbd></span><span>quadro a quadro · com <kbd>shift</kbd>, 1 segundo</span></li>
+    <li><span><kbd>M</kbd></span><span>marca o <b>início</b>, depois o <b>fim</b> — aí escreva o ajuste</span></li>
+    <li><span><kbd>delete</kbd></span><span>remove o trecho selecionado</span></li>
+    <li><span>arrastar</span><span>as <b>bordas</b> de um trecho ajustam o corte</span></li>
+    <li><span>clique duplo</span><span>num trecho desfaz o ajuste dele</span></li>
+    <li><span>pinça</span><span>amplia com dois dedos, onde você aponta</span></li>
+    <li><span>barra de zoom</span><span>amplia a partir do ponto atual</span></li>
+  </ul>
+</div>
+
+<div id="noteEditor" class="note-editor glass hidden">
+  <div class="note-head">
+    <span class="note-range" id="noteRange">0:00 → 0:00</span>
+    <button id="noteClose" class="btn ghost small" title="Fechar">✕</button>
+  </div>
+  <textarea id="noteText" rows="3" placeholder="O que precisa mudar nesse trecho? Ex.: “corta o gaguejo”, “insere a marca do cliente”, “abaixa a música”."></textarea>
+  <div class="note-actions">
+    <button id="noteDelete" class="btn ghost small hidden">remover</button>
+    <div class="spacer"></div>
+    <button id="noteOk" class="btn primary small">salvar marcação</button>
+  </div>
+</div>
+
+<div id="tooltip" class="tooltip hidden"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

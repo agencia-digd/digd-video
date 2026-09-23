@@ -1,0 +1,10 @@
+{
+  "_": "Exemplo de tela dividida. Cada imagem entra no trecho da fala que ela ilustra. O enquadramento foi MEDIDO no vídeo de exemplo: a cabeça da pessoa começa em y=350 e o queixo em y=930, então zoom 1.0 e focusY 230 põem o rosto dentro da janela de vídeo sem cortar a testa. Os padrões do motor (1.25 / 400) foram feitos pra uma cabeça de 660px começando em 455 — cortariam 62px do alto aqui. Meça o seu: tire um quadro do corte com ffmpeg e leia o y do topo da cabeça e do queixo.",
+  "enquadramento": { "top": { "zoom": 1.0, "focusY": 230 } },
+  "itens": [
+    { "arquivo": "split/01-abertura.png", "inicio": 5.1,  "fim": 11.7, "faixa": 750, "posicao": "top" },
+    { "arquivo": "split/02-problema.png", "inicio": 19.1, "fim": 28.3, "faixa": 750, "posicao": "top" },
+    { "arquivo": "split/03-virada.png",   "inicio": 28.3, "fim": 33.4, "faixa": 750, "posicao": "top" },
+    { "arquivo": "split/04-chamada.png",  "inicio": 33.4, "fim": 40.6, "faixa": 750, "posicao": "top" }
+  ]
+}

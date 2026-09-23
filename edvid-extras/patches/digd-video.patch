@@ -1,0 +1,166 @@
+diff --git a/assets/shortform/src/CustomGraphics.tsx b/assets/shortform/src/CustomGraphics.tsx
+index e6863a9c..8398477b 100644
+--- a/assets/shortform/src/CustomGraphics.tsx
++++ b/assets/shortform/src/CustomGraphics.tsx
+@@ -55,10 +55,19 @@ type SplitInsert = {
+ // MEASURE THE SOURCE before trusting these numbers: ffmpeg a frame out of
+ // cut.mp4, read the hair-top and chin y, and set focusY so the head lands where
+ // the user asked. The values below fit a head ~660px tall starting at y 455.
+-const LAYOUT = {
++const LAYOUT_PADRAO = {
+   top: {zoom: 1.25, focusY: 400},
+   bottom: {zoom: 1.0, focusY: 225},
+-} as const;
++};
++
++// Cada pessoa enquadra o próprio vídeo de um jeito, e estes números pinam o
++// ROSTO — não são universais. O aviso acima manda medir; agora dá pra medir e
++// MANDAR, em vez de editar este arquivo a cada vídeo. `splitLayout` vem do
++// edit-data.json, escrito por quem mediu o quadro.
++const LAYOUT = {
++  ...LAYOUT_PADRAO,
++  ...((editData as {splitLayout?: Partial<typeof LAYOUT_PADRAO>}).splitLayout ?? {}),
++};
+ 
+ // A cut transition: a light beam whips across the frame while a short flash
+ // blooms, with a click on the cut. Data, not JSX — `transitions` in
+@@ -67,17 +76,106 @@ const LAYOUT = {
+ type CutFlash = {at: number; intensity?: number; sfx?: string; volume?: number};
+ 
+ export const CustomGraphics: React.FC = () => {
+-  const d = editData as {splitInserts?: SplitInsert[]; transitions?: CutFlash[]};
++  const d = editData as {
++    splitInserts?: SplitInsert[];
++    transitions?: CutFlash[];
++    fechamento?: Fechamento;
++  };
+   const splits = d.splitInserts ?? [];
+   const flashes = d.transitions ?? [];
++  const fecho = d.fechamento;
+   return (
+     <>
+       {splits.length ? <SplitScreen items={splits} /> : null}
+       {flashes.length ? <CutFlashes items={flashes} /> : null}
++      {fecho?.enabled ? <CartaoFinal {...fecho} /> : null}
+     </>
+   );
+ };
+ 
++// ============ FECHAMENTO ======================================================
++// A chamada do fim: "digita QUERO abaixo". O template do edvid só tem headline
++// no COMEÇO (hook), então o card de fim nasce aqui, que é o arquivo que a
++// skill autoriza editar — e continua guiado por dados, não cravado no código.
++//
++// Duas decisões de desenho:
++//   1. A PALAVRA vem antes da frase. Quem assiste sem som precisa ler a palavra
++//      num relance; "digita ... abaixo" é contexto, não é o que se copia.
++//   2. A seta pulsa PRA BAIXO. É ela que diz onde comentar sem gastar palavra,
++//      e o movimento é o que puxa o olho num vídeo que já vai acabar.
++
++type Fechamento = {
++  enabled?: boolean;
++  palavra: string;
++  antes?: string;
++  depois?: string;
++  inicioSec?: number;
++  duracaoSec?: number;
++};
++
++const CartaoFinal: React.FC<Fechamento> = ({
++  palavra, antes = 'digita', depois = 'aqui embaixo', inicioSec, duracaoSec = 3,
++}) => {
++  const {fps, durationInFrames} = useVideoConfig();
++  const dur = Math.round(duracaoSec * fps);
++  // Sem início declarado, encosta no fim do vídeo.
++  const from = inicioSec != null
++    ? Math.round(inicioSec * fps)
++    : Math.max(0, durationInFrames - dur);
++  return (
++    <Sequence from={from} durationInFrames={dur}>
++      <CorpoFinal palavra={palavra} antes={antes} depois={depois} />
++    </Sequence>
++  );
++};
++
++const CorpoFinal: React.FC<{palavra: string; antes: string; depois: string}> = ({
++  palavra, antes, depois,
++}) => {
++  const frame = useCurrentFrame();
++  const {fps} = useVideoConfig();
++
++  const entrada = interpolate(frame, [0, Math.round(0.35 * fps)], [0, 1], {
++    extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic),
++  });
++  const sobe = interpolate(entrada, [0, 1], [40, 0]);
++  // A seta pulsa uma vez por segundo — rápido o bastante pra puxar o olho,
++  // lento o bastante pra não virar tremor.
++  const pulso = Math.sin((frame / fps) * Math.PI * 2) * 10;
++
++  return (
++    <AbsoluteFill style={{
++      justifyContent: 'flex-end', alignItems: 'center',
++      paddingBottom: 300, opacity: entrada,
++    }}>
++      <div style={{
++        transform: `translateY(${sobe}px)`,
++        background: 'rgba(10,16,36,0.94)',
++        borderRadius: 28, padding: '34px 46px 30px',
++        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
++        boxShadow: '0 18px 60px rgba(0,0,0,0.45)',
++        maxWidth: 880,
++      }}>
++        <span style={{
++          fontFamily, fontWeight: 600, fontSize: 40, color: '#B6B8C8',
++          letterSpacing: '0.02em',
++        }}>{antes}</span>
++        <span style={{
++          fontFamily, fontWeight: 900, fontSize: 132, lineHeight: 1,
++          color: '#FFFFFF', letterSpacing: '-0.02em', textTransform: 'uppercase',
++        }}>{palavra}</span>
++        <span style={{
++          fontFamily, fontWeight: 600, fontSize: 40, color: '#B6B8C8',
++        }}>{depois}</span>
++        <span style={{
++          fontSize: 62, lineHeight: 1, marginTop: 6,
++          transform: `translateY(${pulso}px)`,
++        }}>👇</span>
++      </div>
++    </AbsoluteFill>
++  );
++};
++
+ // ============ CUT FLASH =======================================================
+ // Starts BEFORE the cut and peaks on it. A transition that begins on the cut
+ // frame reads as a flash after the fact; leading it by two frames makes the
+diff --git a/helpers/render.py b/helpers/render.py
+index 2cb1b46c..b452c041 100644
+--- a/helpers/render.py
++++ b/helpers/render.py
+@@ -611,9 +611,15 @@ def plan_jcut(edl: dict, edit_dir: Path, cfg: dict) -> list[dict]:
+     return plan
+ 
+ 
+-def assemble_jcut(plan: list[dict], out_path: Path, edit_dir: Path) -> None:
++def assemble_jcut(plan: list[dict], out_path: Path, edit_dir: Path,
++                  clips_dir: Path | None = None) -> None:
+     """Concat the video track, sum the offset audio tracks, mux them together."""
+-    work = edit_dir / "clips_graded"
++    # The segment folder is mode-dependent (clips_draft / clips_preview /
++    # clips_graded). Hardcoding "clips_graded" here made --draft and --preview
++    # write the intermediate into a folder that was never created, and ffmpeg
++    # died with "Error opening output files: No such file or directory".
++    work = clips_dir if clips_dir is not None else edit_dir / "clips_graded"
++    work.mkdir(parents=True, exist_ok=True)
+     vlist = edit_dir / "_concat_jcut.txt"
+     vlist.write_text("".join(f"file '{p['video_path'].resolve()}'\n" for p in plan))
+ 
+@@ -715,7 +721,8 @@ def extract_and_assemble_jcut(
+         with ThreadPoolExecutor(max_workers=jobs) as ex:
+             plan = list(ex.map(work, plan))
+ 
+-    assemble_jcut(plan, base_path, edit_dir)
++    assemble_jcut(plan, base_path, edit_dir, clips_dir=edit_dir / (
++        "clips_draft" if draft else ("clips_preview" if preview else "clips_graded")))
+     return plan
+ 
+ 

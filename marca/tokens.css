@@ -1,0 +1,46 @@
+/* dig.D Vídeo — tokens de marca
+ * Paleta herdada da dig.D (azul, rosa, amarelo). O fundo escuro é o cosmic que a tela já usa.
+ * Contrastes medidos (WCAG) estão no comentário de cada par que vira texto.
+ * Fontes: DM Sans + DM Mono, Google Fonts, licença OFL.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap');
+
+:root {
+  /* Marca */
+  --dv-azul:          #064794;  /* cor do produto: ícone, botão primário, seleção. Branco sobre ele: 9,0:1 */
+  --dv-rosa:          #EA2871;  /* a ação que decide (Aprovar, Renderizar) e o ponto do ".D". Branco sobre ele: 4,2:1, só em texto grande */
+  --dv-amarelo:       #FFD413;  /* agulha da linha do tempo, badge de status. Tinta sobre ele: 12,8:1 */
+
+  /* Bases */
+  --dv-cosmic:        #0A1024;  /* fundo da tela */
+  --dv-cosmic-fundo:  #070B18;  /* fundo mais escuro, atrás dos painéis */
+  --dv-creme:         #F4F1E9;  /* texto sobre cosmic: 16,7:1 */
+  --dv-tinta:         #15141B;  /* texto sobre fundo claro e sobre amarelo */
+  --dv-branco:        #FFFFFF;
+
+  /* Texto secundário e linhas (sobre cosmic) */
+  --dv-texto-2:       #8E93AD;  /* 6,2:1 */
+  --dv-linha:         rgba(244, 241, 233, 0.10);
+  --dv-rosa-texto:    #FF8FBA;  /* rosa legível em texto pequeno sobre cosmic: 8,9:1 */
+
+  /* Papéis — a tela usa estes, não os hex */
+  --dv-bg:             var(--dv-cosmic);
+  --dv-texto:          var(--dv-creme);
+  --dv-primario:       var(--dv-azul);
+  --dv-primario-texto: var(--dv-branco);
+  --dv-decisivo:       var(--dv-rosa);
+  --dv-decisivo-texto: var(--dv-branco);
+  --dv-agulha:         var(--dv-amarelo);
+  --dv-selecao:        rgba(6, 71, 148, 0.55);  /* trecho marcado na linha do tempo */
+  --dv-corte:          rgba(234, 40, 113, 0.22); /* trecho que vai sair */
+  --dv-foco:           var(--dv-amarelo);
+
+  /* Tipografia */
+  --dv-fonte:        'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --dv-fonte-mono:   'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;  /* timecode, duração, tamanho de arquivo */
+
+  /* Forma */
+  --dv-raio:         12px;
+  --dv-raio-icone:   22%;      /* o ícone é quadrado de canto 14/64 */
+}
