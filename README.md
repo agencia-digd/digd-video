@@ -18,6 +18,15 @@
 
 ---
 
+**Primeira vez aqui?**
+
+- **[INSTALAR.md](INSTALAR.md)** — passo a passo da instalação, com como conferir cada passo,
+  configuração campo a campo, o `VIDEOS_TOKEN` e solução de problemas.
+- **[COMO-USAR.md](COMO-USAR.md)** — do upload ao vídeo legendado baixado, o que cada aba faz, os
+  dois portões de aprovação, os estilos de legenda e a edição por nota.
+
+---
+
 ## O que ele faz
 
 Você sobe um vídeo falado (vertical, gravado no celular) e o dig.D Vídeo:
@@ -63,6 +72,9 @@ No Ubuntu: `sudo apt install ffmpeg git python3-venv nodejs npm` (confira se o N
 - Tempo, numa VPS de 8 núcleos sem GPU: transcrever e cortar um vídeo de 27 s levou ~1,5 min; o render com legenda levou ~3 min.
 
 ## Instalação
+
+Resumo abaixo. O passo a passo com verificação e a solução de problemas estão no
+[INSTALAR.md](INSTALAR.md).
 
 ```bash
 # 1. Baixe este repositório e entre na pasta
